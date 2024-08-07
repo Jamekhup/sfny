@@ -1,0 +1,289 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Product CRUD - Home Page!{% endblock %}
+
+{% block body %}
+<style>
+    .main{
+        max-width:1080px;
+        margin:30px auto;
+        padding:10px;
+
+        .alert-info{
+            padding:6px 8px;
+            background-color: #4fde3c;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:8px;
+
+            p{
+                color: #333;
+            }
+
+        }
+
+        .title-button{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:3px;
+
+            h1{
+                font-size:19px;
+            }
+
+            .import{
+                background-color:#65eb89;
+                color:#333;
+            }
+
+            .export{
+                background-color:#3c51de;
+                color:#f9f9f9;
+            }
+
+            a{
+                text-decoration:none;
+                color: #007bff;
+                background-color:#f5d742;
+                padding:4px 14px;
+                border-radius:3px;
+            }
+        }
+
+        form{
+
+            .search-form{
+                width:100%;
+                box-sizing: border-box;
+                border:1px solid #ccc;
+                border-radius:3px;
+                padding:9px 4px;
+            }
+
+            .search-form:focus{
+                border:1px solid #4f4f4e;
+                outline:none;
+                box-shadow:none;
+            }
+
+            .btn {
+                margin-top:6px;
+                padding:8px 14px;
+                color: #007bff;
+                background-color:#f5d742;
+                border:none;
+                cursor:pointer;
+            }
+        }
+
+        .table{
+            width:100%;
+            position:relative;
+            overflow:auto;
+            
+            table{
+                width:100%;
+                border-collapse:collapse;
+
+                thead > tr{
+                    background-color: #f2f2f2;
+
+                    th{
+                        padding:5px 10px;
+                        text-align:left;
+                        border:1px solid #ccc;
+                    }
+                }
+
+                tbody > tr{
+                    background-color: #f2f2f2;
+
+                    td{
+                        padding:5px 10px;
+                        text-align:left;
+                        border:1px solid #ccc;
+
+                        a{
+                            font-size:14px;
+                            text-decoration:none;
+                            background-color: #4d7d31;
+                            color:#f2f2f2;
+                            padding: 0px 8px;
+                            border-radius:3px;
+                        }
+
+                        button{
+                            font-size: 11px;
+                            border:none;
+                            background-color:#8c192a;
+                            color:#fff;
+                            padding:3.5px 8px;
+                            border-radius:3px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    @media only screen and (max-width: 600px) {
+        .main {
+            .title-button{
+                display:flex;
+                flex-wrap:wrap;
+                justify-content:center;
+                gap:20px;
+                align-items:center;
+                margin-bottom:20px;
+
+                h1{
+                    font-size:23px;
+                }
+
+                .import{
+                    background-color:#65eb89;
+                    color:#333;
+                }
+
+                .export{
+                    background-color:#3c51de;
+                    color:#f9f9f9;
+                }
+
+                a{
+                    text-decoration:none;
+                    color: #007bff;
+                    background-color:#f5d742;
+                    padding:4px 14px;
+                    border-radius:3px;
+                }
+            }
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteForms = document.querySelectorAll('.delete-product');
+
+        deleteForms.forEach(form => {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault(); 
+
+                const swalWithBootstrapButtons = Swal.mixin({
+                    confirmButtonClass: 'btn btn-success',
+                    cancelButtonClass: 'btn btn-danger',
+                    buttonsStyling: false,
+                });
+
+                swalWithBootstrapButtons.fire({
+                    text: "Are you sure to delete this?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Delete',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit(); 
+                    }
+                });
+            });
+        });
+    });
+
+    setTimeout(function() {
+        doucument.getElementById('alert').style.display = 'none';
+    }, 2000); //
+
+</script>
+
+<div class="main">
+
+    {% for message in app.flashes('info')%}
+        <div class="alert-info" id="alert">
+            <p>{{message}}<p>
+            <span class="close"></span>
+        </div>
+    {% endfor %}
+
+    <div class="title-button">
+        {{ form_start(form) }}
+            {{ form_widget(form) }}
+            <button type="submit" class="btn btn-primary" style="display:none">Search</button>
+        {{ form_end(form) }}
+        <div>
+            <a href="{{ path('export_product') }}" class="export">Export</a>
+            <a href="{{ path('import_product') }}" class="import">Import</a>
+            <a href="{{ path('app_product_create') }}">Add New Product</a>
+        </div>
+    </div>
+
+
+        <div class="table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ knp_pagination_sortable(pagination, 'ID', 'p.id') }}</th>
+                        <th>{{ knp_pagination_sortable(pagination, 'Name', 'p.name') }}</th>
+                        <th>{{ knp_pagination_sortable(pagination, 'Price', 'p.price') }}</th>
+                        <th>{{ knp_pagination_sortable(pagination, 'Stock', 'p.stock') }}</th>
+                        <th>Description</th>
+                        <th>{{ knp_pagination_sortable(pagination, 'Created At', 'p.created_at') }}</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% if pagination|length > 0 %}
+
+                        {% for product in pagination.items %}
+                            <tr>
+                                <td>{{product.id}}</td>
+                                <td>{{product.name}}</td>
+                                <td>SGD {{product.price}}</td>
+                                <td>{{product.stock}}</td>
+                                <td>{{product.description}}</td>
+                                <td>{{product.createdAt|date('Y-m-d H:i') }}</td>
+                                <td>
+                                    <a href="{{path('edit_product', { 'id': product.id })}}">Edit</a>
+                                </td>
+                                <td>
+
+                                    <form action="{{ path('delete_product', { id: product.id }) }}" class="delete-product" method="POST" style="display:inline;">
+                                        <button type="submit">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+
+                    {% else %}
+
+                        <tr>
+                            <td colspan="8" style="text-align:center">
+                                No product
+                            </td>
+                        </tr>
+
+                    {% endif %}
+
+                    
+                    
+                </tbody>
+            </table>
+
+        </div>
+
+        <div class="pagination">
+            {{ knp_pagination_render(pagination) }}
+        </div>
+
+</div>
+{% endblock %}

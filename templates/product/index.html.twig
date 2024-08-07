@@ -1,0 +1,120 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Create New Product!{% endblock %}
+
+
+
+{% block body %}
+
+<style>
+    .main{
+        max-width:1080px;
+        margin:30px auto;
+
+        .back{
+            width:82.5%;
+            margin:0 auto;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+
+            a{
+                font-size:14px;
+                text-decoration:none;
+                background-color: #4d7d31;
+                color:#f2f2f2;
+                padding: 0px 8px;
+                border-radius:3px;
+            }
+
+            h1{
+                text-align:center;
+                font-size:23px;
+            }
+        }
+
+        form{
+            margin:0 auto;
+            width:80%;
+            background-color: #fff;
+            padding:20px 14px;
+            border-radius:3px;
+
+            .form-control{
+                width:100%;
+                box-sizing: border-box;
+                border:1px solid #ccc;
+                border-radius:3px;
+                padding:9px 4px;
+                margin-bottom:10px;
+            }
+
+            .form-control:focus{
+                border:1px solid #4f4f4e;
+                outline:none;
+                box-shadow:none;
+            }
+
+            .btn {
+                margin-top:6px;
+                padding:8px 14px;
+                color: #007bff;
+                background-color:#f5d742;
+                border:none;
+                cursor:pointer;
+            }
+        }
+    }
+
+    @media only screen and (max-width: 600px) {
+        .main {
+            .back{
+                width:88%;
+                margin:0 auto;
+                display:flex;
+                flex-wrap:wrap;
+                gap:0px;
+                justify-content:center;
+                align-items:center;
+
+                a{
+                    font-size:14px;
+                    text-decoration:none;
+                    background-color: #4d7d31;
+                    color:#f2f2f2;
+                    padding: 0px 8px;
+                    border-radius:3px;
+                }
+
+                h1{
+                    text-align:center;
+                    font-size:23px;
+                }
+            }
+        }
+    }
+</style>
+
+<div class="main">
+    <div class="back">
+        <a href="{{path('app_home')}}">Go Back</a>
+        <h1>Create New Product</h1>
+    </div>
+
+    {{ form_start(form) }}
+
+        {% if form.vars.errors|length > 0 %}
+            <div class="alert alert-danger">
+                <ul>
+                    {% for error in form.vars.errors %}
+                        <li>{{ error.message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {{ form_widget(form) }}
+        <button class="btn">Submit</button>
+    {{ form_end(form) }}
+</div>
+{% endblock %}

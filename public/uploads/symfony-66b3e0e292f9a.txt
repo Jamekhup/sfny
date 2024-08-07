@@ -1,0 +1,11 @@
+composer require twig
+symfony console make:controller ProductController
+symfony console (check comments)
+
+
+symfony console doctrine list  (view doctrine comments)
+
+
+
+Database (entities)
+
