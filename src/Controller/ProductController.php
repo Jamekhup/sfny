@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\Filesystem\Filesystem;
 
 class ProductController extends AbstractController
 {
@@ -159,40 +160,68 @@ class ProductController extends AbstractController
         }
     }
 
-    private EntityManagerInterface $entityManager;
-
-    public function __construct(EntityManagerInterface $entityManager)
-    {
-        $this->entityManager = $entityManager;
-    }
-
 
     #[Route('/product/export', name: 'export_product')]
-    public function export(): Response
+    public function export(EntityManagerInterface $em): Response
     {
+        $filesystem = new Filesystem();
+        $exportDir = sys_get_temp_dir() . '/exported_files';
+        $filesystem->mkdir($exportDir);
 
-        $products = $this->entityManager->getRepository(Product::class)->findAll();
+        $offset = 0;
+        $limit = 10;
+        $fileIndex = 1;
 
-        $response = new Response();
-        $response->headers->set('Content-Type', 'text/csv');
-        $response->headers->set('Content-Disposition', 'attachment;filename="products.csv"');
+        do {
+            $query = $em->createQueryBuilder()
+                ->select('e')
+                ->from('App\Entity\Product', 'e')
+                ->setFirstResult($offset)
+                ->setMaxResults($limit)
+                ->getQuery();
 
-        $output = fopen('php://output', 'w');
+            $results = $query->getResult();
 
-        fputcsv($output, ['ID', 'Name', 'Price', 'Stock', 'Description', 'Created At']);
+            if (empty($results)) {
+                break;
+            }
 
-        foreach ($products as $product) {
-            fputcsv($output, [
-                $product->getId(),
-                $product->getName(),
-                $product->getPrice(),
-                $product->getStock(),
-                $product->getDescription(),
-                $product->getCreatedAt()->format('Y-m-d H:i:s'),
-            ]);
+            $filename = $exportDir . "/export_part_$fileIndex.csv";
+            $handle = fopen($filename, 'w+');
+
+            fputcsv($handle, ['ID', 'Name', 'Price', 'Stock', 'Description', 'Created At']);
+
+            foreach ($results as $result) {
+                fputcsv($handle, [
+                    $result->getId(),
+                    $result->getName(),
+                    $result->getPrice(),
+                    $result->getStock(),
+                    $result->getDescription(),
+                    $result->getCreatedAt()->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($handle);
+
+            $offset += $limit;
+            $fileIndex++;
+        } while (true);
+
+        $zipFile = $exportDir . '/exported_files.zip';
+        $zip = new \ZipArchive();
+        if ($zip->open($zipFile, \ZipArchive::CREATE) === true) {
+            foreach (glob($exportDir . '/*.csv') as $file) {
+                $zip->addFile($file, basename($file));
+            }
+            $zip->close();
         }
 
-        fclose($output);
+        $response = new Response(file_get_contents($zipFile));
+        $response->headers->set('Content-Type', 'application/zip');
+        $response->headers->set('Content-Disposition', 'attachment; filename="exported_files.zip"');
+
+        $filesystem->remove($exportDir);
 
         return $response;
     }
